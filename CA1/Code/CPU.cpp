@@ -32,7 +32,7 @@ void CPU::Reset() {
 	RegWrite = 0;
 
 	// Decode Stage
-	operation = Op::ZE;
+	operation = ZE;
 	opcode = 0;
 	func3 = 0;
 	func7 = 0;
@@ -70,56 +70,58 @@ bool CPU::Decode(instruction* curr)
 	rs2 = (curr->instr.to_ulong() >> 20) & 0x1f; //0b11111
 	rd = (curr->instr.to_ulong() >> 7) & 0x1f; //0b11111
 
+	int32_t instruction = static_cast<int32_t>(curr->instr.to_ulong());
+
 	if (opcode == RTYPE) {
 		if (func3 == 0x0) {
-			if (func7 == 0x0) {ALUOp = ALUadd ; operation = Op::ADD;}
-			else if (func7 == 0x20) {ALUOp = ALUsub; operation = Op::SUB;}
-			else {operation = Op::ERROR;}
+			if (func7 == 0x0) {ALUOp = ALUadd ; operation = ADD;}
+			else if (func7 == 0x20) {ALUOp = ALUsub; operation = SUB;}
+			else {operation = ERROR;}
 		} 
-		else if (func3 == 0x4) {ALUOp = ALUxor; operation = Op::XOR;}
-		else if (func3 == 0x5) {ALUOp = ALUsra; operation = Op::SRA;}
+		else if (func3 == 0x4) {ALUOp = ALUxor; operation = XOR;}
+		else if (func3 == 0x5) {ALUOp = ALUsra; operation = SRA;}
 		RegWrite = 1;
 		ALUSrc = 1;
 	} else if (opcode == ITYPE) {
-		if (func3 == 0x0) {ALUOp = ALUadd; operation = Op::ADDI;}
-		else if (func3 == 0x7) {ALUOp = ALUand; operation = Op::ANDI;}
-		immediate = (curr->instr.to_ulong() >> 20);
+		if (func3 == 0x0) {ALUOp = ALUadd; operation = ADDI;}
+		else if (func3 == 0x7) {ALUOp = ALUand; operation = ANDI;}
+		immediate = (instruction >> 20);
 		RegWrite = 1;
 	} else if (opcode == LWORD && func3 == 0x2) {
 		ALUOp = ALUadd; 
-		operation = Op::LW;
-		immediate = (curr->instr.to_ulong() >> 20);
+		operation = LW;
+		immediate = (instruction >> 20);
 		MemRead = 1;
 		RegWrite = 1;
 		MemToReg = 1;
 	} else if (opcode == SWORD && func3 == 0x2) {
 		ALUOp = ALUadd;
-		operation = Op::SW;
-		int32_t imm11_5 = curr->instr.to_ulong() & 0xfe000000;
-		int32_t imm4_0 = (curr->instr.to_ulong() & 0xf80) << 13;
+		operation = SW;
+		int32_t imm11_5 = instruction & 0xfe000000;
+		int32_t imm4_0 = (instruction & 0xf80) << 13;
 		immediate = (imm11_5 + imm4_0) >> 20; //Redefined for SW
 		MemWrite = 1;
 	} else if (opcode == JTYPE && func3 == 0x0) {
 		//cout << "Jump Instruction" << endl;
 		ALUOp = ALUadd;
-		operation = Op::JALR;
-		immediate = (curr->instr.to_ulong() & 0x80000000) ? (curr->instr.to_ulong() >> 20) | 0xFFFFF800 : (curr->instr.to_ulong() >> 20);
+		operation = JALR;
+		immediate = instruction >> 20;		
 		Jump = 1;
 		RegWrite = 1;
 	} else if (opcode == BTYPE && func3 == 0x4) {
 		//cout << "Branch Instruction" << endl;
 		ALUOp = ALUsub;
-		operation = Op::BLT;
-		auto imm12 = (curr -> instr.to_ulong() & 0x80000000) ? 0xFFFFF800 : 0x0;// Bit 31 (sign extend for negative values)
-		auto imm10_5 = (curr -> instr.to_ulong() & 0x7E000000) >> 20; //bits 30-25
-		auto imm4_1 = (curr -> instr.to_ulong() & 0xF00) >> 7; // bits 11-8
-		auto imm11 = (curr->instr.to_ulong() & 0x80) << 4; //bit 7
+		operation = BLT;
+		int32_t imm12 = (instruction & 0x80000000) ? 0xFFFFF800 : 0x0;// Bit 31 (sign extend for negative values)
+		int32_t imm10_5 = (instruction & 0x7E000000) >> 20; //bits 30-25
+		int32_t imm4_1 = (instruction & 0xF00) >> 7; // bits 11-8
+		int32_t imm11 = (instruction & 0x80) << 4; //bit 7
 		immediate = imm12 | imm11 | imm10_5 | imm4_1;
 		Branch = 1;
 		ALUSrc = 1;
 	}
 	else if (opcode == ZERO) {
-		operation = Op::ZE;
+		operation = ZE;
 		return false;
 	}
 	//cout << opcode << endl;
@@ -227,7 +229,7 @@ bool CPU::NextInstruction() {
 }
 
 std::pair<int32_t, int32_t> CPU::GetReturnRegisters() {
-    return {registerFile[10], registerFile[11]};
+    return std::make_pair(registerFile[10], registerFile[11]);
 }
 
 

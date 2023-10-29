@@ -25,7 +25,7 @@ public:
 	instruction(bitset<32> fetch); // constructor
 };
 
-enum class Op {
+enum Op {
 	ZE, ERROR, ADD, SUB, ADDI, XOR, ANDI, SRA, LW, SW, BLT, JALR,
 };
 
@@ -51,7 +51,7 @@ private:
 	uint32_t rs1;
 	uint32_t rs2;
 	uint32_t rd;
-	uint32_t immediate;
+	int32_t immediate;
 
 	// Execute Stage
 	int32_t readData1;

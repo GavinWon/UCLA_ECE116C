@@ -3,9 +3,9 @@
 #include <iostream>
 #include <bitset>
 #include <stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <string>
-#include<fstream>
+#include <fstream>
 #include <sstream>
 using namespace std;
 
@@ -94,10 +94,11 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	int a0, a1;
-	std::tie(a0, a1) = myCPU.GetReturnRegisters();
+	std::pair<int32_t, int32_t> result = myCPU.GetReturnRegisters();
+	int32_t a0 = result.first;
+	int32_t a1 = result.second;
 	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)
-	  cout << "(" << a0 << "," << a1 << ")" << endl;
+	std::cout << "(" << a0 << "," << a1 << ")" << endl;
 	
 	return 0;
 
