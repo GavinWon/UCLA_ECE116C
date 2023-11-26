@@ -73,6 +73,7 @@ bool CPU::Decode(instruction* curr)
 	int32_t instruction = static_cast<int32_t>(curr->instr.to_ulong());
 
 	if (opcode == RTYPE) {
+		++rTypeCount;
 		if (func3 == 0x0) {
 			if (func7 == 0x0) {ALUOp = ALUadd ; operation = ADD;}
 			else if (func7 == 0x20) {ALUOp = ALUsub; operation = SUB;}
@@ -83,11 +84,13 @@ bool CPU::Decode(instruction* curr)
 		RegWrite = 1;
 		ALUSrc = 1;
 	} else if (opcode == ITYPE) {
+		++iTypeCount;
 		if (func3 == 0x0) {ALUOp = ALUadd; operation = ADDI;}
 		else if (func3 == 0x7) {ALUOp = ALUand; operation = ANDI;}
 		immediate = (instruction >> 20);
 		RegWrite = 1;
 	} else if (opcode == LWORD && func3 == 0x2) {
+		++lwCount;
 		ALUOp = ALUadd; 
 		operation = LW;
 		immediate = (instruction >> 20);
@@ -95,6 +98,7 @@ bool CPU::Decode(instruction* curr)
 		RegWrite = 1;
 		MemToReg = 1;
 	} else if (opcode == SWORD && func3 == 0x2) {
+		++swCount;
 		ALUOp = ALUadd;
 		operation = SW;
 		int32_t imm11_5 = instruction & 0xfe000000;
@@ -102,14 +106,14 @@ bool CPU::Decode(instruction* curr)
 		immediate = (imm11_5 + imm4_0) >> 20; //Redefined for SW
 		MemWrite = 1;
 	} else if (opcode == JTYPE && func3 == 0x0) {
-		//cout << "Jump Instruction" << endl;
+		++jCount;
 		ALUOp = ALUadd;
 		operation = JALR;
 		immediate = instruction >> 20;		
 		Jump = 1;
 		RegWrite = 1;
 	} else if (opcode == BTYPE && func3 == 0x4) {
-		//cout << "Branch Instruction" << endl;
+		++bCount;
 		ALUOp = ALUsub;
 		operation = BLT;
 		int32_t imm12 = (instruction & 0x80000000) ? 0xFFFFF800 : 0x0;// Bit 31 (sign extend for negative values)
@@ -225,11 +229,21 @@ bool CPU::NextInstruction() {
 		PC = PC + 4;
 	}
 	CPU::Reset();
+	clockCount += 1;
 	return true;
 }
 
 std::pair<int32_t, int32_t> CPU::GetReturnRegisters() {
     return std::make_pair(registerFile[10], registerFile[11]);
+}
+
+void CPU::GetStats() {
+	totalInsCount = rTypeCount + iTypeCount + lwCount + swCount + jCount + bCount + 1; // Add one for final instruction where opcode = ZERO
+	ipc = (double) totalInsCount / (clockCount + 1);
+
+	cerr << "Total number of clock cycles: " << clockCount << endl;
+	cerr << "Total r-type instructions run: " << rTypeCount << endl;
+	cerr << "IPC: " << ipc << endl;
 }
 
 

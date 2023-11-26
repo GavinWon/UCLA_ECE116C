@@ -99,6 +99,10 @@ int main(int argc, char* argv[])
 	int32_t a1 = result.second;
 	// print the results (you should replace a0 and a1 with your own variables that point to a0 and a1)
 	std::cout << "(" << a0 << "," << a1 << ")" << endl;
+
+	myCPU.GetStats();
+
+
 	
 	return 0;
 

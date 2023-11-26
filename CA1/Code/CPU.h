@@ -63,7 +63,6 @@ private:
 	int32_t aluResult; // Added missing semicolon here
 
 	// Statistics
-	unsigned short killCounter;
 	unsigned int clockCount;
 	unsigned int rTypeCount;
 	unsigned int iTypeCount;
@@ -84,6 +83,7 @@ public:
 	bool Memory();
 	bool WriteBack();
 	bool NextInstruction();
+	void GetStats();
 	std::pair<int, int> GetReturnRegisters();
 };
 
